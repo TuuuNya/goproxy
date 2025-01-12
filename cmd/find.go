@@ -20,6 +20,5 @@ var FindCmd = &cobra.Command{
 }
 
 func init() {
-	FindCmd.Flags().IntVar(&FinderArgs.MaxDelay, "max-delay", 1000, "Maximum delay in milliseconds")
 	FindCmd.Flags().StringSliceVarP(&FinderArgs.Type, "type", "t", []string{"http", "https", "socks5"}, "Proxy server types")
 }

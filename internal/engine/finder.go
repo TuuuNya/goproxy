@@ -8,8 +8,7 @@ import (
 )
 
 type FinderArgs struct {
-	MaxDelay int
-	Type     []string
+	Type []string
 }
 
 type Finder struct {
@@ -26,8 +25,7 @@ func (f *Finder) Find() []provider.Proxy {
 	log := logger.GetLogger()
 
 	log.WithFields(logrus.Fields{
-		"max_delay": f.Args.MaxDelay,
-		"type":      f.Args.Type,
+		"type": f.Args.Type,
 	}).Info("Finding proxy servers")
 
 	// Find proxy servers
