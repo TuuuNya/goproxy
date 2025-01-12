@@ -3,7 +3,9 @@ package engine
 import (
 	"goproxy/internal/provider"
 	"goproxy/pkg/logger"
+	"sync"
 
+	"github.com/alitto/pond/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,26 +39,45 @@ func (f *Finder) Find() []provider.Proxy {
 		&provider.ProxyListDownload{},
 		&provider.GithubSocks5{},
 	}
-	finded_proxies := []provider.Proxy{}
+
+	var (
+		finded_proxies []provider.Proxy
+		mu             sync.Mutex
+	)
+
+	pool := pond.NewPool(len(providers))
+
+	var wg sync.WaitGroup
+	wg.Add(len(providers))
 
 	for _, p := range providers {
-		proxies, err := p.FetchProxies(f.Args.Type)
-		if err != nil {
-			log.WithError(err).Error("Failed to get proxies")
-			continue
-		}
+		provider := p
+		pool.Submit(func() {
+			defer wg.Done()
 
-		for _, proxy := range proxies {
-			log.WithFields(logrus.Fields{
-				"provider": p.Name(),
-				"ip":       proxy.IP,
-				"port":     proxy.Port,
-				"type":     proxy.Type,
-			}).Debug("Found proxy")
+			proxies, err := provider.FetchProxies(f.Args.Type)
+			if err != nil {
+				log.WithError(err).Error("Failed to get proxies")
+				return
+			}
 
-			finded_proxies = append(finded_proxies, proxy)
-		}
+			mu.Lock()
+			for _, proxy := range proxies {
+				log.WithFields(logrus.Fields{
+					"provider": p.Name(),
+					"ip":       proxy.IP,
+					"port":     proxy.Port,
+					"type":     proxy.Type,
+				}).Debug("Found proxy")
+
+				finded_proxies = append(finded_proxies, proxy)
+			}
+			mu.Unlock()
+		})
 	}
+
+	wg.Wait()
+	pool.StopAndWait()
 
 	log.WithFields(logrus.Fields{
 		"count": len(finded_proxies),
