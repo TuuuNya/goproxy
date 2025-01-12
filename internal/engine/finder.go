@@ -22,7 +22,7 @@ func NewFinder(args FinderArgs) *Finder {
 	}
 }
 
-func (f *Finder) Find() {
+func (f *Finder) Find() []provider.Proxy {
 	log := logger.GetLogger()
 
 	log.WithFields(logrus.Fields{
@@ -35,6 +35,7 @@ func (f *Finder) Find() {
 		&provider.ProxyListOrg{},
 		&provider.XseoIn{},
 		&provider.FreeProxyCz{},
+		&provider.ProxyListPlus{},
 	}
 	finded_proxies := []provider.Proxy{}
 
@@ -61,4 +62,5 @@ func (f *Finder) Find() {
 		"count": len(finded_proxies),
 	}).Info("Find proxy servers finished")
 
+	return finded_proxies
 }
