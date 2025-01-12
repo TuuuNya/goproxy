@@ -22,7 +22,6 @@ func NewFinder(args FinderArgs) *Finder {
 		Args: args,
 	}
 }
-
 func (f *Finder) Find() []provider.Proxy {
 	log := logger.GetLogger()
 
@@ -41,8 +40,8 @@ func (f *Finder) Find() []provider.Proxy {
 	}
 
 	var (
-		finded_proxies []provider.Proxy
-		mu             sync.Mutex
+		findedProxies = make(map[string]provider.Proxy) // 使用 map 模拟 Set
+		mu            sync.Mutex
 	)
 
 	pool := pond.NewPool(len(providers))
@@ -63,14 +62,17 @@ func (f *Finder) Find() []provider.Proxy {
 
 			mu.Lock()
 			for _, proxy := range proxies {
-				log.WithFields(logrus.Fields{
-					"provider": p.Name(),
-					"ip":       proxy.IP,
-					"port":     proxy.Port,
-					"type":     proxy.Type,
-				}).Debug("Found proxy")
+				key := proxy.IP + ":" + proxy.Port // 使用 IP 和端口作为唯一键
+				if _, exists := findedProxies[key]; !exists {
+					log.WithFields(logrus.Fields{
+						"provider": p.Name(),
+						"ip":       proxy.IP,
+						"port":     proxy.Port,
+						"type":     proxy.Type,
+					}).Debug("Found proxy")
 
-				finded_proxies = append(finded_proxies, proxy)
+					findedProxies[key] = proxy
+				}
 			}
 			mu.Unlock()
 		})
@@ -79,9 +81,15 @@ func (f *Finder) Find() []provider.Proxy {
 	wg.Wait()
 	pool.StopAndWait()
 
+	// 将 map 转为 slice
+	result := make([]provider.Proxy, 0, len(findedProxies))
+	for _, proxy := range findedProxies {
+		result = append(result, proxy)
+	}
+
 	log.WithFields(logrus.Fields{
-		"count": len(finded_proxies),
+		"count": len(result),
 	}).Info("Find proxy servers finished")
 
-	return finded_proxies
+	return result
 }
