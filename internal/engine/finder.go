@@ -34,6 +34,7 @@ func (f *Finder) Find() []provider.Proxy {
 		&provider.XseoIn{},
 		&provider.FreeProxyCz{},
 		&provider.ProxyListPlus{},
+		&provider.ProxyListDownload{},
 	}
 	finded_proxies := []provider.Proxy{}
 
