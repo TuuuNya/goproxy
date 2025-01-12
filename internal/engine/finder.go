@@ -26,7 +26,7 @@ func (f *Finder) Find() []provider.Proxy {
 
 	log.WithFields(logrus.Fields{
 		"type": f.Args.Type,
-	}).Info("Finding proxy servers")
+	}).Debug("Finding proxy servers")
 
 	// Find proxy servers
 	providers := []provider.Provider{
@@ -50,7 +50,7 @@ func (f *Finder) Find() []provider.Proxy {
 				"ip":       proxy.IP,
 				"port":     proxy.Port,
 				"type":     proxy.Type,
-			}).Info("Found proxy")
+			}).Debug("Found proxy")
 
 			finded_proxies = append(finded_proxies, proxy)
 		}

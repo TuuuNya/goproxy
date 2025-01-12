@@ -3,7 +3,8 @@ module goproxy
 go 1.22.4
 
 require (
-	github.com/panjf2000/ants/v2 v2.10.0
+	github.com/alitto/pond/v2 v2.1.6
+	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 )
@@ -19,8 +20,8 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
+	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
-	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/appengine v1.6.6 // indirect

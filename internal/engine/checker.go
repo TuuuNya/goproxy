@@ -1,11 +1,10 @@
 package engine
 
 import (
-	"fmt"
 	"goproxy/internal/provider"
 	"time"
 
-	"github.com/panjf2000/ants/v2"
+	"github.com/alitto/pond/v2"
 )
 
 type CheckerArgs struct {
@@ -25,29 +24,18 @@ func NewChecker(args CheckerArgs) *Checker {
 }
 
 func (c *Checker) Check() (checked_proxies []provider.Proxy) {
-	// using ants pool to check proxies concurrently
-	pool, _ := ants.NewPool(c.Args.PoolSize)
-	defer pool.Release()
+	pool := pond.NewPool(c.Args.PoolSize)
 
-	// check proxies
-	results := make(chan provider.Proxy, len(c.Args.SourceProxies))
 	for _, proxy := range c.Args.SourceProxies {
-		proxy := proxy
-		_ = pool.Submit(func() {
-			checked_proxy, err := proxy.Check(c.Args.MaxDelay)
+		pool.Submit(func() {
+			valid_proxy, err := proxy.Check(c.Args.MaxDelay)
 			if err != nil {
 				return
 			}
-
-			results <- checked_proxy
+			checked_proxies = append(checked_proxies, valid_proxy)
 		})
 	}
 
-	for i := 0; i < len(c.Args.SourceProxies); i++ {
-		proxy_results := <-results
-		checked_proxies = append(checked_proxies, proxy_results)
-		fmt.Println("Alive proxy: ", proxy_results)
-	}
-
+	pool.StopAndWait()
 	return checked_proxies
 }

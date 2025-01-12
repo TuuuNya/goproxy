@@ -54,8 +54,6 @@ func (p Proxy) Check(max_delay time.Duration) (Proxy, error) {
 }
 
 func CheckHttpProxy(proxy Proxy, max_delay time.Duration) (Proxy, error) {
-	fmt.Printf("Checking proxy: %s:%s\n", proxy.IP, proxy.Port)
-
 	proxyURL := fmt.Sprintf("http://%s:%s", proxy.IP, proxy.Port)
 	parsedProxy, err := url.Parse(proxyURL)
 	if err != nil {
@@ -117,7 +115,6 @@ func CheckHttpsProxy(proxy Proxy, max_delay time.Duration) (Proxy, error) {
 
 func CheckSocks5Proxy(p Proxy, max_delay time.Duration) (Proxy, error) {
 	proxyURL := fmt.Sprintf("%s:%s", p.IP, p.Port)
-	fmt.Printf("Checking proxy: %s\n", proxyURL)
 
 	dialer, err := proxy.SOCKS5("tcp", proxyURL, nil, nil)
 	if err != nil {

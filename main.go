@@ -27,6 +27,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&rootArgs.Debug, "debug", "d", false, "Enable debug mode")
 
 	rootCmd.AddCommand(cmd.FindCmd)
+	rootCmd.AddCommand(cmd.ServeCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err).Fatal("Failed to execute root command")
