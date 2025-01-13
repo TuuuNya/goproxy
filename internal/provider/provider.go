@@ -12,9 +12,10 @@ import (
 )
 
 type Proxy struct {
-	IP   string
-	Port string
-	Type string
+	IP    string
+	Port  string
+	Type  string
+	Delay time.Duration
 }
 
 type Provider interface {
@@ -36,21 +37,35 @@ func CheckTypeSupported(types []string, specified_types []string) bool {
 }
 
 func (p Proxy) Check(max_delay time.Duration) (Proxy, error) {
-	// Check if the proxy is working
+	// 检查代理是否有效
 	if p.IP == "" || p.Port == "" || p.Type == "" {
 		return Proxy{}, nil
 	}
 
+	startTime := time.Now()
+
+	var checkedProxy Proxy
+	var err error
+
 	switch p.Type {
 	case "http":
-		return CheckHttpProxy(p, max_delay)
+		checkedProxy, err = CheckHttpProxy(p, max_delay)
 	case "https":
-		return CheckHttpsProxy(p, max_delay)
+		checkedProxy, err = CheckHttpsProxy(p, max_delay)
 	case "socks5":
-		return CheckSocks5Proxy(p, max_delay)
+		checkedProxy, err = CheckSocks5Proxy(p, max_delay)
 	default:
 		return Proxy{}, nil
 	}
+
+	// 创建一个新的代理对象，并设置延迟字段
+	checkedProxy.Delay = time.Since(startTime)
+
+	if err != nil {
+		return Proxy{}, err
+	}
+
+	return checkedProxy, nil
 }
 
 func CheckHttpProxy(proxy Proxy, max_delay time.Duration) (Proxy, error) {
@@ -130,11 +145,21 @@ func CheckSocks5Proxy(p Proxy, max_delay time.Duration) (Proxy, error) {
 		Timeout:   max_delay,
 	}
 
-	resp, err := client.Get("https://httpbin.org/ip")
+	resp, err := client.Get("https://www.cloudflare.com/cdn-cgi/trace")
 	if err != nil {
 		return Proxy{}, err
 	}
 	defer resp.Body.Close()
 
 	return p, nil
+}
+
+func RemoveProxy(proxies []Proxy, proxy Proxy) []Proxy {
+	var newProxies []Proxy
+	for _, p := range proxies {
+		if p.IP != proxy.IP || p.Port != proxy.Port {
+			newProxies = append(newProxies, p)
+		}
+	}
+	return newProxies
 }

@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"goproxy/internal/provider"
 	"goproxy/pkg/logger"
+	"math"
 	"net"
 	"time"
-
-	"math/rand"
 
 	"github.com/armon/go-socks5"
 	"github.com/sirupsen/logrus"
@@ -64,7 +63,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	defer clientConn.Close()
 
 	// 随机选择一个代理
-	proxyInstance := s.getRandomProxy()
+	proxyInstance := s.getProxyWithMinDelay()
 	if proxyInstance.IP == "" {
 		log.Warn("No valid proxy selected")
 		return
@@ -98,16 +97,39 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	// 处理客户端连接
 	if err := server.ServeConn(clientConn); err != nil {
 		log.WithError(err).Error("Failed to serve socks5 connection")
+
+		// 如果出错了那就删掉这个代理
+		s.ProxyPool = provider.RemoveProxy(s.ProxyPool, proxyInstance)
 	}
 }
 
-func (s *Server) getRandomProxy() provider.Proxy {
+func (s *Server) getProxyWithMinDelay() provider.Proxy {
 	log := logger.GetLogger()
+
+	// 确保 ProxyPool 不为空
 	if len(s.ProxyPool) == 0 {
 		log.Warn("No valid proxies")
 		return provider.Proxy{}
 	}
-	return s.ProxyPool[rand.Intn(len(s.ProxyPool))]
+
+	// 寻找延迟最低的 Proxy
+	var minLatencyProxy provider.Proxy
+	minLatency := time.Duration(math.MaxInt64) // 初始化为最大值
+
+	for _, proxy := range s.ProxyPool {
+		if proxy.Delay < minLatency {
+			minLatency = proxy.Delay
+			minLatencyProxy = proxy
+		}
+	}
+
+	log.WithFields(logrus.Fields{
+		"ip":    minLatencyProxy.IP,
+		"port":  minLatencyProxy.Port,
+		"delay": minLatencyProxy.Delay,
+	}).Debug("Selected min delay proxy")
+
+	return minLatencyProxy
 }
 
 func (s *Server) updateProxyPool() {
