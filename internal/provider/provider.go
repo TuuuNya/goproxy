@@ -153,13 +153,3 @@ func CheckSocks5Proxy(p Proxy, max_delay time.Duration) (Proxy, error) {
 
 	return p, nil
 }
-
-func RemoveProxy(proxies []Proxy, proxy Proxy) []Proxy {
-	var newProxies []Proxy
-	for _, p := range proxies {
-		if p.IP != proxy.IP || p.Port != proxy.Port {
-			newProxies = append(newProxies, p)
-		}
-	}
-	return newProxies
-}

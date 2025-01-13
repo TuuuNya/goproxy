@@ -97,9 +97,6 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	// 处理客户端连接
 	if err := server.ServeConn(clientConn); err != nil {
 		log.WithError(err).Error("Failed to serve socks5 connection")
-
-		// 如果出错了那就删掉这个代理
-		s.ProxyPool = provider.RemoveProxy(s.ProxyPool, proxyInstance)
 	}
 }
 
